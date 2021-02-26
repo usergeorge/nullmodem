@@ -221,11 +221,11 @@ static inline void handle_end(struct nullmodem_end *end)
 				for (i=0; i<cnt; ++i)
 					drain[i] &= mask;
 			}
-			int written = tty_insert_flip_string(end->other->tty, drain, cnt);
+			int written = tty_insert_flip_string(end->other->tty->port, drain, cnt);
 			if (written > 0)
 			{
 				//dprintf("%s - #%d -> #%d: copied %d bytes\n", __FUNCTION__, end->tty->index, end->other->tty->index, written);
-				tty_flip_buffer_push(end->other->tty);
+				tty_flip_buffer_push(end->other->tty->port);
 			}
 		}
 	}
