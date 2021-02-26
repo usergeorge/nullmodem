@@ -139,7 +139,7 @@ static void change_pins(struct nullmodem_end *end, unsigned int set, unsigned in
 	}
 
 	if (end->other->tty
-	&& (end->other->tty->termios->c_cflag & CRTSCTS)
+	&& (end->other->tty->termios.c_cflag & CRTSCTS)
 	&& (change&TIOCM_RTS))
 	{
 		if (!(new_pins&TIOCM_RTS))
@@ -168,7 +168,7 @@ static inline void handle_end(struct nullmodem_end *end)
 		//dprintf("%s - #%d: hw_stopped\n", __FUNCTION__, end->tty->index);
 		return;
 	}
-	unsigned nominal_bits = end->tty->termios->c_ospeed * FACTOR * delta_jiffies / HZ;
+	unsigned nominal_bits = end->tty->termios.c_ospeed * FACTOR * delta_jiffies / HZ;
 	unsigned add_bits = end->nominal_bit_count - end->actual_bit_count;
 	unsigned chars = (nominal_bits+add_bits) / end->char_length;
 	unsigned actual_bits = chars * end->char_length;
@@ -203,11 +203,11 @@ static inline void handle_end(struct nullmodem_end *end)
 
 	if (end->other->tty)
 	{
-		if (end->tty->termios->c_ospeed == end->other->tty->termios->c_ispeed
-		&& (end->tty->termios->c_cflag & (CSIZE|PARENB|CSTOPB))
-		 ==(end->other->tty->termios->c_cflag & (CSIZE|PARENB|CSTOPB)))
+		if (end->tty->termios.c_ospeed == end->other->tty->termios.c_ispeed
+		&& (end->tty->termios.c_cflag & (CSIZE|PARENB|CSTOPB))
+		 ==(end->other->tty->termios.c_cflag & (CSIZE|PARENB|CSTOPB)))
 		{
-			tcflag_t csize = (end->tty->termios->c_cflag&CSIZE);
+			tcflag_t csize = (end->tty->termios.c_cflag&CSIZE);
 			if (csize != CS8)
 			{
 				int i;
@@ -267,7 +267,7 @@ static void handle_termios(struct tty_struct *tty)
 	else
 		change_pins(end, TIOCM_DTR|TIOCM_RTS, 0);
 
-	unsigned int cflag = tty->termios->c_cflag;
+	unsigned int cflag = tty->termios.c_cflag;
 	end->char_length = 2;
 	switch (cflag & CSIZE)
 	{
@@ -281,7 +281,7 @@ static void handle_termios(struct tty_struct *tty)
 	if (cflag & CSTOPB) end->char_length += 1;
 	end->char_length *= FACTOR;
 
-	tty->hw_stopped = (tty->termios->c_cflag&CRTSCTS)
+	tty->hw_stopped = (tty->termios.c_cflag&CRTSCTS)
 					&& !(get_pins(end) & TIOCM_CTS);
 }
 static int nullmodem_open(struct tty_struct *tty, struct file *file)
@@ -392,13 +392,13 @@ static void nullmodem_set_termios(struct tty_struct *tty, struct ktermios *old_t
 
 	dprintf("%s - #%d\n", __FUNCTION__, tty->index);
 
-	cflag = tty->termios->c_cflag;
+	cflag = tty->termios.c_cflag;
 
 	/* check that they really want us to change something */
 	if (old_termios)
 	{
 		if (cflag == old_termios->c_cflag
-		&& RELEVANT_IFLAG(tty->termios->c_iflag) == RELEVANT_IFLAG(old_termios->c_iflag))
+		&& RELEVANT_IFLAG(tty->termios.c_iflag) == RELEVANT_IFLAG(old_termios->c_iflag))
 		{
 			dprintf(" - nothing to change...\n");
 			return;
@@ -668,7 +668,7 @@ static void nullmodem_throttle(struct tty_struct * tty)
 	if (I_IXOFF(tty))
 		nullmodem_send_xchar(tty, STOP_CHAR(tty));
 
-	if (tty->termios->c_cflag & CRTSCTS)
+	if (tty->termios.c_cflag & CRTSCTS)
 	{
 		spin_lock_irqsave(&end->pair->spin, flags);
 		change_pins(end, 0, TIOCM_RTS);
@@ -683,7 +683,7 @@ static void nullmodem_unthrottle(struct tty_struct * tty)
 
 	dprintf("%s - #%d\n", __FUNCTION__, tty->index);
 
-	if (tty->termios->c_cflag & CRTSCTS)
+	if (tty->termios.c_cflag & CRTSCTS)
 	{
 		spin_lock_irqsave(&end->pair->spin, flags);
 		change_pins(end, TIOCM_RTS, 0);
