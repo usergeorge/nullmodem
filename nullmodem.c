@@ -41,6 +41,8 @@
 #include <linux/sched.h>
 #include <linux/kfifo.h>
 #include <asm/uaccess.h>
+#include <linux/sched/signal.h>
+#include <linux/timer.h>
 
 #define DRIVER_VERSION "v1.1"
 #define DRIVER_AUTHOR "Peter Remmers <pitti98@googlemail.com>"
@@ -233,7 +235,8 @@ static inline void handle_end(struct nullmodem_end *end)
 //	if (kfifo_len(&end->fifo) < WAKEUP_CHARS)
 		tty_wakeup(end->tty);
 }
-static void nullmodem_timer_proc(unsigned long data)
+
+static void nullmodem_timer_callback(struct timer_list * data)
 {
 	int i;
 	unsigned long flags;
@@ -716,8 +719,7 @@ static int __init nullmodem_init(void)
 	int i;
 	dprintf("%s - \n", __FUNCTION__);
 
-	init_timer(&nullmodem_timer);
-	setup_timer(&nullmodem_timer, nullmodem_timer_proc, 0);
+	timer_setup(&nullmodem_timer, nullmodem_timer_callback, 0);
 
 	for (i = 0; i < NULLMODEM_PAIRS; ++i)
 	{
